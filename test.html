@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8"/>
+	<script src="https://d3js.org/d3.v4.min.js"></script>
+	<script type="text/javascript">
+		var p;
+		document.addEventListener("DOMContentLoaded", function(){
+			var objects = [{values: [{Age: 28, WAR: 1.5}, {Age: 29, WAR: 1.6}, {Age: 30, WAR: 2.1}]},
+				{values: [{Age: 29, WAR: 0.5}, {Age: 30, WAR: 4.6}, {Age: 31, WAR: 3.1}]}];
+			var svg = d3.select("svg");
+			/*
+			p = d3.select("body")
+				.selectAll("ol")
+				.data(objects)
+				.enter()
+				.append("ol");
+				.selectAll("li")
+				.data((d) => d.values)
+				.enter()
+				.append("li")
+				.text((d)=>"Age: " + d.Age +", WAR: " + d.WAR);
+			*/
+
+			svg.selectAll("path")
+					.data(objects)
+					.enter()
+					.append("path");
+
+			svg.selectAll("ul")
+					.data([3,1,1,1])
+					.enter()
+					.append("ul");
+
+		});
+	</script>
+</head>
+<body>
+	<svg width="960" height="500"></svg>
+</body>
+</html>

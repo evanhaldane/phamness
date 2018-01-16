@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<style>
+	.baseline {
+		fill: none;
+		stroke: red;
+		stroke-linejoin: round;
+		stroke-linecap: round;
+		stroke-width: 3.5;
+	}
+	.similar {
+		fill: none;
+		stroke: #999999;
+		stroke-linejoin: round;
+		stroke-linecap: round;
+		stroke-width: 1.5;
+	}
+</style>
+<link rel="stylesheet" href="auto-complete.css">
+<svg width="960" height="500">
+</svg>
+<head>
+	<meta charset="utf-8"/>
+	<title>phamNess</title>
+	<script src="https://d3js.org/d3.v4.min.js"></script>
+	<script src="auto-complete.min.js"></script>
+	<script type="text/javascript">
+
+		var svg = d3.select("svg"),
+	    margin = {top: 20, right: 20, bottom: 30, left: 50},
+	    width = +svg.attr("width") - margin.left - margin.right,
+	    height = +svg.attr("height") - margin.top - margin.bottom,
+	    g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")"),
+	    players;
+
+    	var x = d3.scaleLinear()
+    		.domain([18, 42])
+    	    .rangeRound([0, width]);
+
+    	var y = d3.scaleLinear()
+    		.domain([-2, 10])
+    	    .rangeRound([height, 0]);
+
+    	var line = d3.line()
+    	    .x((d) => x(d.Age))
+    	    .y((d) => y(d.WAR));
+
+		g.append("g")
+			.attr("transform", "translate(0," + height + ")")
+			.call(d3.axisBottom(x));
+
+        g.append("g")
+        	.call(d3.axisLeft(y))
+        	.append("text")
+        	.attr("fill", "#000")
+        	.attr("transform", "rotate(-90)")
+        	.attr("y", 6)
+        	.attr("dy", "0.71em")
+        	.attr("text-anchor", "end")
+        	.text("WAR");
+
+    	function compareTo(baseId){
+				var baselinePlayer = players.find((d) => d.key == baseId);
+				baselinePlayer.values = baselinePlayer.values.sort((year1, year2) => year1.Age - year2.Age);
+				players = players.map(function(obj){
+					obj.difference = difference(baselinePlayer.values, obj.values);
+					return obj});
+				var similar = players.sort((player1,player2) => player1.difference-player2.difference).slice(1, 11);
+				similar = similar.map((player) => {
+					player.values = player.values.sort((year1, year2) => year1.Age - year2.Age);
+					return player;
+					});
+				
+				var similarSelection = svg.selectAll("path.similar")
+					.data(similar);
+
+				var baselineSelection = svg.selectAll("path.baseline")
+					.data([baselinePlayer]);
+
+				similarSelection.exit().remove();
+				baselineSelection.exit().remove();
+
+				similarSelection
+					.enter()
+					.append("path")
+					.attr("class", "similar")
+					.merge(similarSelection)
+					.attr("d", (d) => line(d.values));
+
+				baselineSelection
+					.enter()
+					.append("path")
+					.attr("class", "baseline")
+					.merge(baselineSelection)
+					.attr("d", (d) => line(d.values));
+    	}
+		
+
+		function difference(basePlayerSeasons, comparisonPlayerSeasons){
+			var diff = 0;
+			for (var i = 0; i < basePlayerSeasons.length; i++){
+				var age = basePlayerSeasons[i].Age;
+				var compare = comparisonPlayerSeasons.filter((season)=>season.Age == age);
+				if (compare.length > 0){
+					diff += Math.abs(basePlayerSeasons[i].WAR - compare[0].WAR);
+				} else {
+					diff += Math.abs(basePlayerSeasons[i].WAR);
+				}
+			}
+			return diff;
+		}
+
+		function handlePlayer(){
+			playerid = +document.getElementById("inputPlayerId").value;
+			compareTo(playerid);
+			return false;
+		}
+
+		document.addEventListener("DOMContentLoaded", function(){
+  			// Handler when the DOM is fully loaded
+
+  			d3.csv("seasons.csv", function(data){
+				players = d3.nest()
+							.key((d)=>d.playerid)
+							.entries(data);
+
+				var playerIds = players.map((d)=> d.key);
+				
+				new autoComplete({
+				    selector: '#inputPlayerId',
+				    minChars: 2,
+				    source: function(term, suggest){
+				        //term = term.toLowerCase();
+				        var matches = [];
+				        for (i=0; i<playerIds.length; i++) {
+				            if (~playerIds[i].indexOf(term)) {
+				            	matches.push(playerIds[i]);
+				            }
+				        }
+				        suggest(matches);
+			    	}
+	    		});
+			});
+
+			document.getElementById('playerForm').addEventListener('submit', function(e) {
+    			handlePlayer();
+    			e.preventDefault();
+			}, false);
+		});
+
+
+
+	</script>
+</head>
+<body>
+	<form id="playerForm">
+		<input type="text" id="inputPlayerId">
+		<input type="submit" value="Submit">
+	</form>
+</body>
