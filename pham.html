@@ -59,39 +59,39 @@
         	.text("WAR");
 
     	function compareTo(baseId){
-				var baselinePlayer = players.find((d) => d.key == baseId);
-				baselinePlayer.values = baselinePlayer.values.sort((year1, year2) => year1.Age - year2.Age);
-				players = players.map(function(obj){
-					obj.difference = difference(baselinePlayer.values, obj.values);
-					return obj});
-				var similar = players.sort((player1,player2) => player1.difference-player2.difference).slice(1, 11);
-				similar = similar.map((player) => {
-					player.values = player.values.sort((year1, year2) => year1.Age - year2.Age);
-					return player;
-					});
-				
-				var similarSelection = svg.selectAll("path.similar")
-					.data(similar);
+			var baselinePlayer = players.find((d) => d.key == baseId);
+			baselinePlayer.values = baselinePlayer.values.sort((year1, year2) => year1.Age - year2.Age);
+			players = players.map(function(obj){
+				obj.difference = difference(baselinePlayer.values, obj.values);
+				return obj});
+			var similar = players.sort((player1,player2) => player1.difference-player2.difference).slice(1, 11);
+			similar = similar.map((player) => {
+				player.values = player.values.sort((year1, year2) => year1.Age - year2.Age);
+				return player;
+				});
+			
+			var similarSelection = svg.selectAll("path.similar")
+				.data(similar);
 
-				var baselineSelection = svg.selectAll("path.baseline")
-					.data([baselinePlayer]);
+			var baselineSelection = svg.selectAll("path.baseline")
+				.data([baselinePlayer]);
 
-				similarSelection.exit().remove();
-				baselineSelection.exit().remove();
+			similarSelection.exit().remove();
+			baselineSelection.exit().remove();
 
-				similarSelection
-					.enter()
-					.append("path")
-					.attr("class", "similar")
-					.merge(similarSelection)
-					.attr("d", (d) => line(d.values));
+			similarSelection
+				.enter()
+				.append("path")
+				.attr("class", "similar")
+				.merge(similarSelection)
+				.attr("d", (d) => line(d.values));
 
-				baselineSelection
-					.enter()
-					.append("path")
-					.attr("class", "baseline")
-					.merge(baselineSelection)
-					.attr("d", (d) => line(d.values));
+			baselineSelection
+				.enter()
+				.append("path")
+				.attr("class", "baseline")
+				.merge(baselineSelection)
+				.attr("d", (d) => line(d.values));
     	}
 		
 
@@ -123,21 +123,32 @@
 							.key((d)=>d.playerid)
 							.entries(data);
 
-				var playerIds = players.map((d)=> d.key);
+				var playerObjects = players.map((d) => ({id: d.key, Name: d.values[0].Name}));
 				
 				new autoComplete({
 				    selector: '#inputPlayerId',
 				    minChars: 2,
 				    source: function(term, suggest){
-				        //term = term.toLowerCase();
+				        term = term.toLowerCase();
 				        var matches = [];
-				        for (i=0; i<playerIds.length; i++) {
-				            if (~playerIds[i].indexOf(term)) {
-				            	matches.push(playerIds[i]);
+				        for (i=0; i<playerObjects.length; i++) {
+				            if (~playerObjects[i].Name.toLowerCase().indexOf(term)) {
+				            	matches.push(playerObjects[i]);
 				            }
 				        }
 				        suggest(matches);
-			    	}
+			    	},
+					renderItem: function (item, search){
+					        search = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+					        var re = new RegExp("(" + search.split(' ').join('|') + ")", "gi");
+					        return '<div class="autocomplete-suggestion" data-id="' +
+					        		item.id + '" data-name="' + item.Name + '" data-val="' + 
+					        		search + '">'+item.Name.replace(re, "<b>$1</b>")+'</div>';
+					    },
+					onSelect: function(e, term, item){
+					    	playerid = +item.getAttribute('data-id');
+					    	compareTo(playerid);
+					    }
 	    		});
 			});
 
@@ -146,8 +157,6 @@
     			e.preventDefault();
 			}, false);
 		});
-
-
 
 	</script>
 </head>
