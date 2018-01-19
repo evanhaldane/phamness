@@ -109,12 +109,6 @@
 			return diff;
 		}
 
-		function handlePlayer(){
-			playerid = +document.getElementById("inputPlayerId").value;
-			compareTo(playerid);
-			return false;
-		}
-
 		document.addEventListener("DOMContentLoaded", function(){
   			// Handler when the DOM is fully loaded
 
@@ -126,7 +120,7 @@
 				var playerObjects = players.map((d) => ({id: d.key, Name: d.values[0].Name}));
 				
 				new autoComplete({
-				    selector: '#inputPlayerId',
+				    selector: '#inputPlayerName',
 				    minChars: 2,
 				    source: function(term, suggest){
 				        term = term.toLowerCase();
@@ -147,22 +141,18 @@
 					    },
 					onSelect: function(e, term, item){
 					    	playerid = +item.getAttribute('data-id');
+					    	document.getElementById("inputPlayerName").value = item.textContent;
 					    	compareTo(playerid);
 					    }
 	    		});
 			});
 
-			document.getElementById('playerForm').addEventListener('submit', function(e) {
-    			handlePlayer();
-    			e.preventDefault();
-			}, false);
 		});
 
 	</script>
 </head>
 <body>
 	<form id="playerForm">
-		<input type="text" id="inputPlayerId">
-		<input type="submit" value="Submit">
+		<input type="text" id="inputPlayerName">
 	</form>
 </body>
