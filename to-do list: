@@ -2,6 +2,7 @@ to-do list:
 
 ✓ cumulative? answer: not a good visualization for future years
 ✓ compare last few years
+✓ don't modify master player objects - may need to be re-used
 - filter out pitchers and/or include pitcher war
 
 - tooltips on points
