@@ -5,14 +5,14 @@
 		stroke: red;
 		stroke-linejoin: round;
 		stroke-linecap: round;
-		stroke-width: 3.5;
+		stroke-width: 4.5;
 	}
 	.similar {
 		fill: none;
 		stroke: #999999;
 		stroke-linejoin: round;
 		stroke-linecap: round;
-		stroke-width: 1.5;
+		stroke-width: 2;
 	}
 </style>
 <link rel="stylesheet" href="auto-complete.css">
@@ -52,7 +52,7 @@
 	        .attr("y", 6)
 	        .attr("dy", "0.71em")
 	        .attr("text-anchor", "end")
-	        .text("WAR");
+	        .text("WAR600");
 
 
     	function compareTo(baseId){
@@ -68,7 +68,7 @@
 				player.difference = difference(baselinePlayer, player, minAge, maxAge);
 				return player});
 			
-			var similar = players.sort((player1,player2) => player1.difference-player2.difference).slice(0, 11);
+			var similar = players.sort((player1,player2) => player1.difference-player2.difference).slice(0, 21);
 			similar = similar.map((player) => {
 				player.values = player.values.sort((year1, year2) => year1.Age - year2.Age);
 				return player;
@@ -80,14 +80,14 @@
 
 	    	var line = d3.line()
 	    	    .x((d) => x(d.Age))
-	    	    .y((d) => y(d.WAR));
+	    	    .y((d) => y(d.WAR600));
 
 	    	g.select(".xaxis")
 				.call(d3.axisBottom(x).ticks(5).tickFormat(d3.format(".0f")));
 
 
 			var similarSelection = g.selectAll("path.similar")
-				.data(similar.slice(1,11));
+				.data(similar.slice(1,21));
 
 			var baselineSelection = g.selectAll("path.baseline")
 				.data(similar.slice(0,1));
@@ -100,7 +100,8 @@
 				.append("path")
 				.attr("class", "similar")
 				.merge(similarSelection)
-				.attr("d", (d) => line(d.values.filter((d)=>d.Age >= minAge && d.Age <= maxAge)));
+				.attr("d", (d) => line(d.values.filter((d)=>d.Age >= minAge && d.Age <= maxAge)))
+				.style("stroke-opacity", (d)=>1.36*Math.exp(-d.difference*0.404));
 
 			baselineSelection
 				.enter()
@@ -110,14 +111,13 @@
 				.attr("d", (d) => line(d.values.filter((d)=>d.Age >= minAge && d.Age <= maxAge)));
     	}
 		
-
 		function difference(baselinePlayer, comparisonPlayer, minAge, maxAge){
 			totalDiff = baselinePlayer.values.reduce((runningTotal, currentObj) => {
 				baselineAge = currentObj.Age;
 				if (baselineAge >= minAge && baselineAge <= maxAge){
 					correspondingPlayerYear = comparisonPlayer.values.find((d)=>d.Age == baselineAge);
-					currentDiff = Math.abs(+currentObj.WAR - 
-						(correspondingPlayerYear ? +correspondingPlayerYear.WAR : 0));
+					currentDiff = Math.abs(+currentObj.WAR600 - 
+						(correspondingPlayerYear ? +correspondingPlayerYear.WAR600 : 0));
 				} else {
 					currentDiff = 0;
 				}
@@ -134,6 +134,14 @@
 				players = d3.nest()
 							.key((d)=>d.playerid)
 							.entries(data);
+
+				players = players.map((playerObject) => {
+					playerObject.values = playerObject.values.map((year) => {
+						year.WAR600 = (+year.WAR / + year.PA) * 600;
+						return year;
+					})
+					return playerObject;
+				});
 
 				var recentPlayers = players.filter((player) => player.values.some((d)=>d.Season == "2017"));
 				recentPlayers = recentPlayers.map((d) => ({id: d.key, Name: d.values[0].Name}));

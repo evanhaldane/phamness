@@ -6,9 +6,11 @@ to-do list:
 ✓ filter out pitchers and/or include pitcher war
 ✓ in autocomplete only include players who played last year
 
-- war / 600?
-- bayesian estimate of war/600?
+✓ war / 600?
+✓ bayesian estimate of war/600? - v2
 ✓ same position? - Not easily doable, ignore for now
+- only include in filter if has future to compare
 
 - once decisions are made on all/most of above, make pretty
+- transitions on scales
 - tooltips on points?
