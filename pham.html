@@ -135,7 +135,8 @@
 							.key((d)=>d.playerid)
 							.entries(data);
 
-				var playerObjects = players.map((d) => ({id: d.key, Name: d.values[0].Name}));
+				var recentPlayers = players.filter((player) => player.values.some((d)=>d.Season == "2017"));
+				recentPlayers = recentPlayers.map((d) => ({id: d.key, Name: d.values[0].Name}));
 				
 				new autoComplete({
 				    selector: '#inputPlayerName',
@@ -143,9 +144,9 @@
 				    source: function(term, suggest){
 				        term = term.toLowerCase();
 				        var matches = [];
-				        for (i=0; i<playerObjects.length; i++) {
-				            if (~playerObjects[i].Name.toLowerCase().indexOf(term)) {
-				            	matches.push(playerObjects[i]);
+				        for (i=0; i<recentPlayers.length; i++) {
+				            if (~recentPlayers[i].Name.toLowerCase().indexOf(term)) {
+				            	matches.push(recentPlayers[i]);
 				            }
 				        }
 				        suggest(matches);

@@ -3,10 +3,12 @@ to-do list:
 ✓ cumulative? answer: not a good visualization for future years
 ✓ compare last few years
 ✓ don't modify master player objects - may need to be re-used
-- filter out pitchers and/or include pitcher war
+✓ filter out pitchers and/or include pitcher war
+✓ in autocomplete only include players who played last year
 
-- tooltips on points
 - war / 600?
-- same position?
+- bayesian estimate of war/600?
+✓ same position? - Not easily doable, ignore for now
 
 - once decisions are made on all/most of above, make pretty
+- tooltips on points?
