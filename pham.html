@@ -56,45 +56,65 @@
 
 
     	function compareTo(baseId){
+			// update for future years
 			const comparisonYear = 2017;
+			// could be changed via UI
 			const yearsToConsider = 3;
+
 			var baselinePlayer = players.find((d) => d.key == baseId);
+
+			// look back number of years requested
 			const minAge = (baselinePlayer.values[0].Age - baselinePlayer.values[0].Season +
 							 comparisonYear - yearsToConsider + 1);
-			const maxAge = minAge + 4;
-			//baselinePlayer.values = baselinePlayer.values.filter((year) => year.Season >= comparisonYear - 2);
-			//baselinePlayer.values = baselinePlayer.values.sort((year1, year2) => year1.Age - year2.Age);
-			players = players.map(function(player){
+			// two years past comparison year
+			const maxAge = minAge + yearsToConsider+1;
+			// only want to compare to players with an appropriate future
+			comparable = players.filter((player)=> player.values.some((obj)=>obj.Age == maxAge));
+			// add in original player
+			comparable.push(baselinePlayer)
+			// calculate difference for comparables and add to object
+			comparable = comparable.map(function(player){
 				player.difference = difference(baselinePlayer, player, minAge, maxAge);
-				return player});
+				return player
+			});
 			
-			var similar = players.sort((player1,player2) => player1.difference-player2.difference).slice(0, 21);
+			// take twenty most similar players
+			var similar = comparable.sort((player1,player2) => player1.difference-player2.difference).slice(0, 21);
+			
+			// sort by Age for graphing
 			similar = similar.map((player) => {
 				player.values = player.values.sort((year1, year2) => year1.Age - year2.Age);
 				return player;
 				});
 			
-		    var x = d3.scaleLinear()
+			// create x scale from minimum age to maximum age
+		    x = d3.scaleLinear()
 	    		.domain([minAge, maxAge])
 	    	    .rangeRound([0, width]);
 
-	    	var line = d3.line()
+	    	// line function based on defined x and y scales
+	    	line = d3.line()
 	    	    .x((d) => x(d.Age))
 	    	    .y((d) => y(d.WAR600));
 
+	    	// update axis
 	    	g.select(".xaxis")
-				.call(d3.axisBottom(x).ticks(5).tickFormat(d3.format(".0f")));
+				.call(d3.axisBottom(x).ticks(yearsToConsider+2).tickFormat(d3.format(".0f")));
 
-
+			// update selection for similar players
 			var similarSelection = g.selectAll("path.similar")
 				.data(similar.slice(1,21));
-
+			
+			// update selection for baseline player
 			var baselineSelection = g.selectAll("path.baseline")
 				.data(similar.slice(0,1));
 
+			// remove outgoing data
 			similarSelection.exit().remove();
 			baselineSelection.exit().remove();
 
+			// for new similar players, draw lines
+			// opacity depends exponentially on similarity
 			similarSelection
 				.enter()
 				.append("path")
@@ -103,6 +123,7 @@
 				.attr("d", (d) => line(d.values.filter((d)=>d.Age >= minAge && d.Age <= maxAge)))
 				.style("stroke-opacity", (d)=>1.36*Math.exp(-d.difference*0.404));
 
+			// draw new baseline player
 			baselineSelection
 				.enter()
 				.append("path")
@@ -131,10 +152,11 @@
   			// Handler when the DOM is fully loaded
 
   			d3.csv("seasons.csv", function(data){
+  				// create array of players indexed by playerid
 				players = d3.nest()
 							.key((d)=>d.playerid)
 							.entries(data);
-
+				// calculate WAR600 for each player-year
 				players = players.map((playerObject) => {
 					playerObject.values = playerObject.values.map((year) => {
 						year.WAR600 = (+year.WAR / + year.PA) * 600;
@@ -143,9 +165,12 @@
 					return playerObject;
 				});
 
+				// players who have a recent season can be chosen for comparison
 				var recentPlayers = players.filter((player) => player.values.some((d)=>d.Season == "2017"));
+				// get name out of one of the seasons for player
 				recentPlayers = recentPlayers.map((d) => ({id: d.key, Name: d.values[0].Name}));
 				
+				// create autoComplete based on player names
 				new autoComplete({
 				    selector: '#inputPlayerName',
 				    minChars: 2,
@@ -159,6 +184,7 @@
 				        }
 				        suggest(matches);
 			    	},
+			    	// render options in autocomplete with player name and player id as attribute
 					renderItem: function (item, search){
 					        search = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 					        var re = new RegExp("(" + search.split(' ').join('|') + ")", "gi");
@@ -166,6 +192,7 @@
 					        		item.id + '" data-name="' + item.Name + '" data-val="' + 
 					        		search + '">'+item.Name.replace(re, "<b>$1</b>")+'</div>';
 					    },
+					// upon selection, get player name and call function to compare others to player
 					onSelect: function(e, term, item){
 					    	playerid = +item.getAttribute('data-id');
 					    	document.getElementById("inputPlayerName").value = item.textContent;
