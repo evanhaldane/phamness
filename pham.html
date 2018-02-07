@@ -121,7 +121,7 @@
 				.attr("class", "similar")
 				.merge(similarSelection)
 				.attr("d", (d) => line(d.values.filter((d)=>d.Age >= minAge && d.Age <= maxAge)))
-				.style("stroke-opacity", (d)=>1.36*Math.exp(-d.difference*0.404));
+				.style("stroke-opacity", (d)=>1.54*Math.exp(-d.difference*1.74));
 
 			// draw new baseline player
 			baselineSelection
@@ -133,15 +133,24 @@
     	}
 		
 		function difference(baselinePlayer, comparisonPlayer, minAge, maxAge){
+			const mostRecentAge = (maxAge - 2);
 			totalDiff = baselinePlayer.values.reduce((runningTotal, currentObj) => {
 				baselineAge = currentObj.Age;
 				if (baselineAge >= minAge && baselineAge <= maxAge){
 					correspondingPlayerYear = comparisonPlayer.values.find((d)=>d.Age == baselineAge);
-					currentDiff = Math.abs(+currentObj.WAR600 - 
+					var currentDiff = Math.abs(+currentObj.WAR600 - 
 						(correspondingPlayerYear ? +correspondingPlayerYear.WAR600 : 0));
+					if (baselineAge == mostRecentAge){
+						currentDiff = currentDiff * 0.6;
+					} else if (baselineAge == mostRecentAge - 1){
+						currentDiff = currentDiff * 0.3;
+					} else if (baselineAge == mostRecentAge - 2){
+						currentDiff = currentDiff * 0.1;
+					}
 				} else {
 					currentDiff = 0;
 				}
+				
 				return runningTotal + currentDiff;
 			}, 0);
 
